@@ -9,7 +9,7 @@ export default function Header() {
         <div className="flex justify-between items-center h-20">
           <div className="flex items-center space-x-2">
             <Scroll className="h-8 w-8 text-rose-600" />
-            <span className="text-2xl font-serif text-gray-900">Elegance</span>
+            <span className="text-2xl font-serif text-gray-900">Wedding Store</span>
           </div>
           
           <nav className="hidden md:flex space-x-8">
