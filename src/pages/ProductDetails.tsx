@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { Mail } from "lucide-react";
+import { Mail, MessageCircle } from "lucide-react";
 import axios from "axios";
 
 interface ProductData {
@@ -20,24 +20,42 @@ interface Photo {
   isPrimary: boolean;
 }
 
+interface FitOption {
+  fitOnOptionID: number;
+  optionType: string;
+  priceAdjustment: number;
+  product: number;
+}
+
 export default function ProductDetails() {
   const { id } = useParams();
   const [product, setProduct] = useState<ProductData | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [selectedImage, setSelectedImage] = useState(0);
   const [loading, setLoading] = useState(true);
-
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    message: "",
-  });
+  const [fitOptions, setFitOptions] = useState<FitOption[]>([]);
+  const [selectedFitOption, setSelectedFitOption] = useState<FitOption | null>(
+    null
+  );
 
   useEffect(() => {
+    const fetchFitOptions = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:8080/api/fitOnOptions/product/${id}`
+        );
+        const data = await response.json();
+        setFitOptions(data);
+        setSelectedFitOption(data[0]); // Select first option by default
+      } catch (error) {
+        console.error("Error fetching fit options:", error);
+      }
+    };
+
     const fetchProduct = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:8080/api/products/10002`
+          `http://localhost:8080/api/products/${id}`
         );
         setProduct(response.data);
       } catch (error) {
@@ -49,7 +67,7 @@ export default function ProductDetails() {
     const fetchPhotos = async () => {
       try {
         const response = await fetch(
-          `http://localhost:8080/api/photos/product/10002`
+          `http://localhost:8080/api/photos/product/${id}`
         );
         const data = await response.json();
         setPhotos(data);
@@ -59,17 +77,30 @@ export default function ProductDetails() {
     };
 
     fetchPhotos();
-
+    fetchFitOptions();
     fetchProduct();
   }, [id, product?.productID]);
 
   if (loading) return <div>Loading...</div>;
   if (!product) return <div>Product not found</div>;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle form submission (e.g., send email)
-    console.log("Form submitted:", formData);
+  const generateWhatsAppUrl = (product: ProductData | null) => {
+    if (!product) return "#";
+
+    const message = `
+  Hello,
+  
+  I am interested in the following product:
+  
+  Product Name: ${product.name}
+  Price: Rs ${product.baseRentalPrice.toLocaleString()}
+    
+  Please let me know more about this product.
+  
+  Thank you!
+  `.trim();
+
+    return `https://wa.me/+94707616850?text=${encodeURIComponent(message)}`;
   };
 
   return (
@@ -108,9 +139,31 @@ export default function ProductDetails() {
 
         <div>
           <h1 className="font-serif text-3xl mb-2">{product.name}</h1>
-          <p className="text-2xl text-gray-900 mb-6">
-            ${product.baseRentalPrice.toLocaleString()}
-          </p>
+          <div className="mb-6 flex justify-between items-center">
+            <div className="text-2xl text-gray-900">
+              Rs{" "}
+              {(
+                selectedFitOption?.priceAdjustment || product.baseRentalPrice
+              ).toLocaleString()}
+            </div>
+            
+
+            <div className="flex gap-4">
+              {fitOptions.map((option) => (
+                <button
+                  key={option.fitOnOptionID}
+                  onClick={() => setSelectedFitOption(option)}
+                  className={`px-4 py-2 rounded-lg border ${
+                    selectedFitOption?.fitOnOptionID === option.fitOnOptionID
+                      ? "bg-rose-600 text-white border-rose-600"
+                      : "bg-white text-gray-700 border-gray-300 hover:border-rose-600"
+                  }`}
+                >
+                  {option.optionType}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div className="prose prose-rose mb-8">
             <h2 className="font-serif text-xl mb-4">Product Details</h2>
@@ -124,77 +177,21 @@ export default function ProductDetails() {
             </ul>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <h2 className="font-serif text-xl mb-4">
-              Inquire About This Product
-            </h2>
+          <h2 className="font-serif text-xl mb-4">
+            Inquire About This Product
+          </h2>
 
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-500 focus:ring-rose-500"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-500 focus:ring-rose-500"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="message"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Message
-              </label>
-              <textarea
-                id="message"
-                rows={4}
-                value={formData.message}
-                onChange={(e) =>
-                  setFormData({ ...formData, message: e.target.value })
-                }
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-500 focus:ring-rose-500"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="inline-flex items-center bg-rose-600 text-white px-6 py-3 rounded-md hover:bg-rose-700 transition-colors"
-            >
-              <Mail className="mr-2 h-5 w-5" />
-              Send Inquiry
-            </button>
-          </form>
+          <a
+            href={generateWhatsAppUrl(product)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition-colors"
+          >
+            <MessageCircle className="mr-2 h-5 w-5" />
+            Contact via WhatsApp
+          </a>
         </div>
       </div>
     </div>
   );
 }
-
-

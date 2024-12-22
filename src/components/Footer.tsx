@@ -44,7 +44,7 @@ export default function Footer() {
           <div>
             <h3 className="font-serif text-xl mb-4">Follow Us</h3>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-600 hover:text-rose-600">
+              <a href="https://www.facebook.com/profile.php?id=100084257240932&mibextid=LQQJ4d" className="text-gray-600 hover:text-rose-600">
                 <Facebook className="h-6 w-6" />
               </a>
               <a href="#" className="text-gray-600 hover:text-rose-600">
@@ -56,7 +56,7 @@ export default function Footer() {
         
         <div className="mt-8 pt-8 border-t border-gray-200 text-center">
           <p className="text-gray-500">
-            © {new Date().getFullYear()} Elegance. All rights reserved.
+            © {new Date().getFullYear()} Wedding Store. All rights reserved.
           </p>
         </div>
       </div>
